@@ -1,0 +1,43 @@
+name: ATTinyCore AVR
+
+on: [push, pull_request]
+
+env:
+  ARDUINO_BOARD_MANAGER_ADDITIONAL_URLS: "http://drazzy.com/package_drazzy.com_index.json"
+
+jobs:
+  ATTinyCore-AVR:
+    runs-on: windows-latest
+
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v3
+
+      - name: 'Setup Arduino CLI'
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: 'Configure Arduino CLI'
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install ATTinyCore:avr
+          arduino-cli lib install LoRaRF
+
+      - name: 'Create folders'
+        shell: powershell
+        run: |
+          New-Item ATTinyCore-AVR\ATtiny84 -ItemType Directory
+          New-Item ATTinyCore-AVR\ATtiny84\Micronucleus -ItemType Directory
+          New-Item ATTinyCore-AVR\ATtiny84\Optiboot -ItemType Directory
+
+      - name: 'Build'
+        run: |
+          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84 --fqbn ATTinyCore:avr:attinyx4:chip=84 ./avr-sleep-pulse-counter
+          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Micronucleus --fqbn ATTinyCore:avr:attinyx4micr ./avr-sleep-pulse-counter
+          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Optiboot --fqbn ATTinyCore:avr:attinyx4opti:chip=84 ./avr-sleep-pulse-counter
+
+      - name: 'Upload binaries'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ATTinyCore-AVR
+          path: ATTinyCore-AVR
+          retention-days: 5

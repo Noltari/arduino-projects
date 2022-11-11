@@ -1,0 +1,38 @@
+name: ESP32
+
+on: [push, pull_request]
+
+env:
+  ARDUINO_BOARD_MANAGER_ADDITIONAL_URLS: "https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json"
+
+jobs:
+  ESP32:
+    runs-on: windows-latest
+
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v3
+
+      - name: 'Setup Arduino CLI'
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: 'Configure Arduino CLI'
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32
+
+      - name: 'Create folders'
+        shell: powershell
+        run: |
+          New-Item ESP32\LOLIN\S2-mini -ItemType Directory
+
+      - name: 'Build'
+        run: |
+          arduino-cli compile --clean --output-dir ESP32/LOLIN/S2-mini --fqbn esp32:esp32:lolin_s2_mini ./esp-rtc-sleep-pulse-counter
+
+      - name: 'Upload binaries'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ESP32
+          path: ESP32
+          retention-days: 5

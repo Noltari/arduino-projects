@@ -1,0 +1,40 @@
+name: Arduino AVR
+
+on: [push, pull_request]
+
+jobs:
+  Arduino-AVR:
+    runs-on: windows-latest
+
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v3
+
+      - name: 'Setup Arduino CLI'
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: 'Configure Arduino CLI'
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+          arduino-cli lib install LoRaRF
+
+      - name: 'Create folders'
+        shell: powershell
+        run: |
+          New-Item Arduino-AVR\Mega -ItemType Directory
+          New-Item Arduino-AVR\Nano -ItemType Directory
+          New-Item Arduino-AVR\Uno -ItemType Directory
+
+      - name: 'Build'
+        run: |
+          arduino-cli compile --clean --output-dir Arduino-AVR/Mega --fqbn arduino:avr:mega ./avr-sleep-pulse-counter
+          arduino-cli compile --clean --output-dir Arduino-AVR/Nano --fqbn arduino:avr:nano ./avr-sleep-pulse-counter
+          arduino-cli compile --clean --output-dir Arduino-AVR/Uno --fqbn arduino:avr:uno ./avr-sleep-pulse-counter
+
+      - name: 'Upload binaries'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Arduino-AVR
+          path: Arduino-AVR
+          retention-days: 5
