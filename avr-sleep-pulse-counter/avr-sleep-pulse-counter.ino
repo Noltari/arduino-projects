@@ -145,7 +145,7 @@ static inline uint16_t adc_read(void)
 {
   #if defined(ADC_PIN)
     analogReference(DEFAULT);
-    return (uint16_t) (analogRead(ADC_PIN) * (500.0 / 1023.0));
+    return (uint16_t) analogRead(ADC_PIN);
   #else
     return 0;
   #endif /* ADC_PIN */
@@ -155,7 +155,7 @@ static inline uint16_t temp_read(void)
 {
   #if defined(ADC_TEMPERATURE)
     analogReference(INTERNAL);
-    return (analogRead(ADC_TEMPERATURE) - 247) / 1.22;
+    return (uint16_t) analogRead(ADC_TEMPERATURE);
   #else
     return 0;
   #endif /* ADC_TEMPERATURE */
