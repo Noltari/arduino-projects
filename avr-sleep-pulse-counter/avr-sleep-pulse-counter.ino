@@ -39,7 +39,7 @@
 #define PULSE_BIT (1UL << 20)
 
 #if defined(__AVR_ATtiny84__)
-  #define ADC_PIN PIN_PA0
+  #define ADC_PIN A0 /* PIN_PA0 */
   #define LORA_RST_PIN PIN_PA3
   #define LORA_SS_PIN PIN_PA7
   #define PULSE_ACTIVE LOW
