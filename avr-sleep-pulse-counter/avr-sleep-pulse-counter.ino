@@ -201,12 +201,11 @@ void calc_data(uint8_t pkt[PKT_SIZE])
 void send_data(void)
 {
   uint8_t pkt[PKT_SIZE];
-  uint8_t i;
 
   calc_data(pkt);
 
   #if defined(UART_ENABLE)
-    for (i = 0; i < PKT_SIZE; i++)
+    for (uint8_t i = 0; i < PKT_SIZE; i++)
     {
       char buf[3];
       sprintf(buf, "%02X", pkt[i]);
