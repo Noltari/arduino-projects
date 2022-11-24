@@ -80,19 +80,36 @@
 #define PC_ICR_BIT digitalPinToPCICRbit(PULSE_PIN)
 #define PC_MSK_REG *digitalPinToPCMSK(PULSE_PIN)
 #define PC_MSK_BIT digitalPinToPCMSKbit(PULSE_PIN)
-#if (PC_ICR_BIT == 0)
-  #define PCINT_vect PCINT0_vect
-#elif (PC_ICR_BIT == 1)
-  #define PCINT_vect PCINT1_vect
-#elif (PC_ICR_BIT == 2)
-  #define PCINT_vect PCINT2_vect
-#endif /* PC_ICR_BIT -> PCINT_vect */
+
+#if defined(__AVR_ATtiny84__)
+  #define PCINT_FORCE
+
+  #if (PC_ICR_BIT == PCIE0)
+    #define PULSE_PCINT_VECT PCINT0_vect
+  #elif (PC_ICR_BIT == PCIE1)
+    #define PULSE_PCINT_VECT PCINT1_vect
+  #endif /* PC_ICR_BIT -> PCINTx_vect */
+#endif /* __AVR_ATtiny84__ */
+
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__)
+  #if (PC_ICR_BIT == 0)
+    #define PULSE_PCINT_VECT PCINT0_vect
+  #elif (PC_ICR_BIT == 1)
+    #define PULSE_PCINT_VECT PCINT1_vect
+  #elif (PC_ICR_BIT == 2)
+    #define PULSE_PCINT_VECT PCINT2_vect
+  #endif /* PC_ICR_BIT -> PCINTx_vect */
+#endif /* __AVR_ATmega328P__ || __AVR_ATmega2560__ */
+
+#if defined(PCINT_FORCE) || (digitalPinToInterrupt(PULSE_PIN) == NOT_AN_INTERRUPT)
+  #define PULSE_PCINT PULSE_PCINT_VECT
+#endif /* PCINT vs INT */
 
 volatile uint32_t pulse_cnt = 0;
 volatile uint8_t pulse_status = LOW;
-#if (digitalPinToInterrupt(PULSE_PIN) == NOT_AN_INTERRUPT)
+#if defined(PULSE_PCINT)
   volatile uint8_t last_pulse_status = LOW;
-#endif /* PCINT */
+#endif /* PULSE_PCINT */
 
 SX127x LoRa;
 
@@ -240,8 +257,8 @@ void send_data(void)
   #endif /* LORA_ENABLE */
 }
 
-#if (digitalPinToInterrupt(PULSE_PIN) == NOT_AN_INTERRUPT)
-  ISR(PCINT_vect)
+#if defined(PULSE_PCINT)
+  ISR(PULSE_PCINT)
   {
     pulse_status = digitalRead(PULSE_PIN);
 
@@ -291,9 +308,9 @@ void setup(void)
 
   pinMode(PULSE_PIN, INPUT_PULLUP);
   pulse_status = digitalRead(PULSE_PIN);
-  #if (digitalPinToInterrupt(PULSE_PIN) == NOT_AN_INTERRUPT)
+  #if defined(PULSE_PCINT)
     last_pulse_status = pulse_status;
-  #endif /* PCINT */
+  #endif /* PULSE_PCINT */
 
   #if defined(ADC_PIN)
     pinMode(ADC_PIN, INPUT);
@@ -305,7 +322,7 @@ void setup(void)
     Serial.flush();
   #endif /* UART_ENABLE */
 
-  #if (digitalPinToInterrupt(PULSE_PIN) == NOT_AN_INTERRUPT)
+  #if defined(PULSE_PCINT)
     PC_MSK_REG |= (1 << PC_MSK_BIT);
     PC_ICR_REG |= (1 << PC_ICR_BIT);
   #else
