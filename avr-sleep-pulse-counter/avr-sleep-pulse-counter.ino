@@ -8,7 +8,7 @@
 
 //#define CRC16_ENABLE
 #define LORA_ENABLE
-#define UART_ENABLE
+//#define UART_ENABLE
 
 #define LORA_BW 125000
 #define LORA_CODE_RATE 5
