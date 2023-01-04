@@ -68,8 +68,8 @@
 
 #if defined(__AVR_ATmega2560__)
   #define ADC_PIN A0
-  #define LORA_RST_PIN 9
-  #define LORA_SS_PIN 10
+  #define LORA_RST_PIN 49
+  #define LORA_SS_PIN 53
   #define PULSE_ACTIVE LOW
   #define PULSE_MODE CHANGE
   #define PULSE_PIN 20
