@@ -337,8 +337,6 @@ void setup(void)
 void loop(void)
 {
   /* Ready */
-  power_adc_enable();
-
   #if defined(LORA_ENABLE)
     #if defined(__AVR_ATmega328P__)
       power_timer0_enable();
@@ -356,6 +354,16 @@ void loop(void)
     #endif /* __AVR_ATtiny84__ */
   #endif /* LORA_ENABLE */
 
+  #if defined(ADC_PIN) || defined(ADC_TEMPERATURE)
+    power_adc_enable();
+
+    #if defined(__AVR_ATtiny84__)
+      /* Turn on ADC */
+      ADCSRA |= (1 << ADEN);
+      delay(1);
+    #endif /* __AVR_ATtiny84__ */
+  #endif /* ADC_PIN || ADC_TEMPERATURE */
+
   #if defined(UART_ENABLE)
     #if defined(__AVR_ATmega328P__)
       power_usart0_enable();
@@ -370,6 +378,21 @@ void loop(void)
   send_data();
 
   /* Sleep */
+  #if defined(__AVR_ATtiny84__)
+    pinMode(LORA_RST_PIN, INPUT_PULLUP);
+    pinMode(LORA_SS_PIN, INPUT_PULLUP);
+    pinMode(PIN_PA4, INPUT_PULLUP); /* SCK */
+    pinMode(PIN_PA5, INPUT_PULLUP); /* MISO */
+    pinMode(PIN_PA6, INPUT_PULLUP); /* MOSI */
+
+    #if defined(UART_ENABLE)
+      pinMode(PIN_PA1, INPUT_PULLUP); /* TXD */
+      pinMode(PIN_PA2, INPUT_PULLUP); /* RXD */
+    #endif /* UART_ENABLE */
+
+    /* Turn off ADC */
+    ADCSRA &= (~(1 << ADEN));
+  #endif /* __AVR_ATtiny84__ */
   power_all_disable();
   sleep_mode();
 }
