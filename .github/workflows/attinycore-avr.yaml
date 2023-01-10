@@ -31,9 +31,9 @@ jobs:
 
       - name: 'Build'
         run: |
-          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84 --fqbn ATTinyCore:avr:attinyx4:chip=84 ./avr-sleep-pulse-counter
-          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Micronucleus --fqbn ATTinyCore:avr:attinyx4micr ./avr-sleep-pulse-counter
-          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Optiboot --fqbn ATTinyCore:avr:attinyx4opti:chip=84 ./avr-sleep-pulse-counter
+          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84 --fqbn ATTinyCore:avr:attinyx4:chip=84 ./avr-pcint-pulse-counter
+          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Micronucleus --fqbn ATTinyCore:avr:attinyx4micr ./avr-pcint-pulse-counter
+          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Optiboot --fqbn ATTinyCore:avr:attinyx4opti:chip=84 ./avr-pcint-pulse-counter
 
       - name: 'Upload binaries'
         uses: actions/upload-artifact@v3

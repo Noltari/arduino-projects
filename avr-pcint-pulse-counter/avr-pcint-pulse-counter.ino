@@ -36,14 +36,12 @@
 #define ADC_MASK 0x3FF
 #define VCC_SHIFT 0
 #define TEMP_SHIFT 10
-#define PULSE_BIT (1UL << 20)
 
 #if defined(__AVR_ATtiny84__)
   #define ADC_PIN A0 /* PIN_PA0 */
   #define LORA_RST_PIN PIN_PA3
   #define LORA_SS_PIN PIN_PA7
-  #define PULSE_ACTIVE LOW
-  #define PULSE_MODE CHANGE
+  #define PULSE_MODE FALLING
   #define PULSE_PIN PIN_PB2
   #if (F_CPU >= 12000000)
     #define UART_SPEED 57600
@@ -60,8 +58,7 @@
   #define ADC_PIN A0
   #define LORA_RST_PIN 9
   #define LORA_SS_PIN 10
-  #define PULSE_ACTIVE LOW
-  #define PULSE_MODE CHANGE
+  #define PULSE_MODE FALLING
   #define PULSE_PIN 2
   #define UART_SPEED 9600
 #endif /* __AVR_ATmega328P__ */
@@ -70,8 +67,7 @@
   #define ADC_PIN A0
   #define LORA_RST_PIN 49
   #define LORA_SS_PIN 53
-  #define PULSE_ACTIVE LOW
-  #define PULSE_MODE CHANGE
+  #define PULSE_MODE FALLING
   #define PULSE_PIN 20
   #define UART_SPEED 9600
 #endif /* __AVR_ATmega2560__ */
@@ -82,8 +78,6 @@
 #define PC_MSK_BIT digitalPinToPCMSKbit(PULSE_PIN)
 
 #if defined(__AVR_ATtiny84__)
-  #define PCINT_FORCE
-
   #if (PC_ICR_BIT == PCIE0)
     #define PULSE_PCINT_VECT PCINT0_vect
   #elif (PC_ICR_BIT == PCIE1)
@@ -105,11 +99,11 @@
   #define PULSE_PCINT PULSE_PCINT_VECT
 #endif /* PCINT vs INT */
 
+#if (PULSE_MODE == CHANGE)
+#error PULSE_MODE = CHANGE is not supported
+#endif /* PULSE_MODE == CHANGE */
+
 volatile uint32_t pulse_cnt = 0;
-volatile uint8_t pulse_status = LOW;
-#if defined(PULSE_PCINT)
-  volatile uint8_t last_pulse_status = LOW;
-#endif /* PULSE_PCINT */
 
 SX127x LoRa;
 
@@ -170,10 +164,6 @@ void calc_data(uint8_t pkt[PKT_SIZE])
 
   misc = (adc_read() & ADC_MASK) << VCC_SHIFT;
   misc |= (temp_read() & ADC_MASK) << TEMP_SHIFT;
-  if (pulse_status == PULSE_ACTIVE)
-  {
-    misc |= PULSE_BIT;
-  }
 
   /* Header */
   pkt[0] = 'L';
@@ -259,32 +249,24 @@ void send_data(void)
 #if defined(PULSE_PCINT)
   ISR(PULSE_PCINT)
   {
-    pulse_status = digitalRead(PULSE_PIN);
+    const uint8_t pulse_status = digitalRead(PULSE_PIN);
+    bool pulse_cond;
 
-  #if (PULSE_MODE == RISING)
-    if ((pulse_status != last_pulse_status) && (pulse_status == HIGH))
-  #elif (PULSE_MODE == FALLING)
-    if ((pulse_status != last_pulse_status) && (pulse_status == LOW))
-  #else /* CHANGE */
-    if (pulse_status != last_pulse_status)
-  #endif /* PULSE_MODE */
+    #if (PULSE_MODE == RISING)
+      pulse_cond = (pulse_status == HIGH);
+    #elif (PULSE_MODE == FALLING)
+      pulse_cond = (pulse_status == LOW);
+    #endif /* PULSE_MODE */
+
+    if (pulse_cond)
     {
-      if (pulse_status == PULSE_ACTIVE)
-      {
-        pulse_cnt++;
-      }
+      pulse_cnt++;
     }
-
-    last_pulse_status = pulse_status;
   }
 #else
   void pulse_ISR(void)
   {
-    pulse_status = digitalRead(PULSE_PIN);
-    if (pulse_status == PULSE_ACTIVE)
-    {
-      pulse_cnt++;
-    }
+    pulse_cnt++;
   }
 #endif /* PCINT vs INT */
 
@@ -306,10 +288,6 @@ void setup(void)
   #endif /* __AVR_ATtiny84__ */
 
   pinMode(PULSE_PIN, INPUT_PULLUP);
-  pulse_status = digitalRead(PULSE_PIN);
-  #if defined(PULSE_PCINT)
-    last_pulse_status = pulse_status;
-  #endif /* PULSE_PCINT */
 
   #if defined(ADC_PIN)
     pinMode(ADC_PIN, INPUT);
