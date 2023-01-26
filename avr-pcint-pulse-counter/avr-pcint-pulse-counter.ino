@@ -78,6 +78,7 @@
 #define PC_MSK_BIT digitalPinToPCMSKbit(PULSE_PIN)
 
 #if defined(__AVR_ATtiny84__)
+  /* Avoid using INT0 since it only works for LOW */
   #define PCINT_FORCE
 
   #if (PC_ICR_BIT == PCIE0)
@@ -101,27 +102,9 @@
   #define PULSE_PCINT PULSE_PCINT_VECT
 #endif /* PCINT vs INT */
 
-#if defined(PULSE_PCINT)
-  #if defined(__AVR_ATtiny84__)
-    #if (PULSE_MODE == CHANGE)
-      #error "PULSE_MODE = CHANGE is not supported for PCINT"
-    #elif (PULSE_MODE == HIGH)
-      #error "PULSE_MODE = HIGH is not supported for PCINT"
-    #elif (PULSE_MODE == LOW)
-      #error "PULSE_MODE = CHANGE is not supported for PCINT"
-    #endif /* PULSE_MODE */
-  #endif /* __AVR_ATtiny84__ */
-#else
-  #if defined(__AVR_ATtiny84__)
-    #if (PULSE_MODE != LOW)
-      #error "PULSE_MODE != LOW is not supported for INT"
-    #endif /* PULSE_MODE != LOW */
-  #endif /* __AVR_ATtiny84__ */
-#endif /* PCINT vs INT */
-
-#if (PULSE_MODE == CHANGE)
-  #error PULSE_MODE = CHANGE is not supported
-#endif /* PULSE_MODE == CHANGE */
+#if (PULSE_MODE != RISING) && (PULSE_MODE != FALLING)
+  #error "PULSE_MODE: Only RISING and FALLING are supported"
+#endif /* PULSE_MODE */
 
 volatile uint32_t pulse_cnt = 0;
 
@@ -269,23 +252,13 @@ void send_data(void)
 #if defined(PULSE_PCINT)
   ISR(PULSE_PCINT)
   {
-    const uint8_t pulse_status = digitalRead(PULSE_PIN);
-    bool pulse_cond;
-
-    #if (PULSE_MODE == RISING)
-      pulse_cond = (pulse_status == HIGH);
-    #elif (PULSE_MODE == FALLING)
-      pulse_cond = (pulse_status == LOW);
-    #endif /* PULSE_MODE */
-
-    if (pulse_cond)
-    {
-      pulse_cnt++;
-    }
+    /* Pin Change Interrupt */
+    pulse_cnt++;
   }
 #else
   void pulse_ISR(void)
   {
+    /* External Interrupt: only works for LOW on some MCUs */
     pulse_cnt++;
   }
 #endif /* PCINT vs INT */
