@@ -25,6 +25,8 @@
 #define WDT_PS_8S ((1 << WDP3) | (1 << WDP0))
 #define WDT_CNT_WRAP 6
 
+#define PULSE_SLEEP 2000
+
 #define HDR_SIZE 2
 #define PULSE_SIZE 4
 #define MISC_SIZE 3
@@ -112,6 +114,7 @@
 
 volatile bool data_send = true;
 volatile uint32_t pulse_cnt = 0;
+volatile bool pulse_delay = false;
 volatile uint8_t wdt_cnt = 0;
 
 SX127x LoRa;
@@ -272,13 +275,21 @@ ISR(WDT_vect)
   ISR(PULSE_PCINT)
   {
     /* Pin Change Interrupt */
-    pulse_cnt++;
+    if (!pulse_delay)
+    {
+      pulse_cnt++;
+      pulse_delay = true;
+    }
   }
 #else
   void pulse_ISR(void)
   {
     /* External Interrupt: only works for LOW on some MCUs */
-    pulse_cnt++;
+    if (!pulse_delay)
+    {
+      pulse_cnt++;
+      pulse_delay = true;
+    }
   }
 #endif /* PCINT vs INT */
 
@@ -392,6 +403,14 @@ void loop(void)
       ADCSRA &= (~(1 << ADEN));
     #endif /* __AVR_ATtiny84__ */
     power_all_disable();
+  }
+
+  if (pulse_delay)
+  {
+    power_timer0_enable();
+    delay(PULSE_SLEEP);
+    pulse_delay = false;
+    power_timer0_disable();
   }
 
   sleep_mode();
