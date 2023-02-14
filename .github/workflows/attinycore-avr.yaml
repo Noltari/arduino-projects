@@ -31,10 +31,6 @@ jobs:
 
       - name: 'Build'
         run: |
-          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84 --fqbn ATTinyCore:avr:attinyx4:chip=84 ./avr-pcint-pulse-counter
-          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Micronucleus --fqbn ATTinyCore:avr:attinyx4micr ./avr-pcint-pulse-counter
-          arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Optiboot --fqbn ATTinyCore:avr:attinyx4opti:chip=84 ./avr-pcint-pulse-counter
-
           arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84 --fqbn ATTinyCore:avr:attinyx4:chip=84 ./avr-wdt-pulse-counter
           arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Micronucleus --fqbn ATTinyCore:avr:attinyx4micr ./avr-wdt-pulse-counter
           arduino-cli compile --clean --output-dir ATTinyCore-AVR\ATtiny84\Optiboot --fqbn ATTinyCore:avr:attinyx4opti:chip=84 ./avr-wdt-pulse-counter

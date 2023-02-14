@@ -28,10 +28,6 @@ jobs:
 
       - name: 'Build'
         run: |
-          arduino-cli compile --clean --output-dir Arduino-AVR/Mega --fqbn arduino:avr:mega ./avr-pcint-pulse-counter
-          arduino-cli compile --clean --output-dir Arduino-AVR/Nano --fqbn arduino:avr:nano ./avr-pcint-pulse-counter
-          arduino-cli compile --clean --output-dir Arduino-AVR/Uno --fqbn arduino:avr:uno ./avr-pcint-pulse-counter
-
           arduino-cli compile --clean --output-dir Arduino-AVR/Mega --fqbn arduino:avr:mega ./avr-wdt-pulse-counter
           arduino-cli compile --clean --output-dir Arduino-AVR/Nano --fqbn arduino:avr:nano ./avr-wdt-pulse-counter
           arduino-cli compile --clean --output-dir Arduino-AVR/Uno --fqbn arduino:avr:uno ./avr-wdt-pulse-counter
